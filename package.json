@@ -1,0 +1,22 @@
+{
+  "name": "proxy-nodejs",
+  "version": "0.0.1",
+  "description": "",
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "main": "app/index.js",
+  "scripts": {
+    "start": "node app/index.js",
+    "lint": "eslint",
+    "pretest": "date -Iseconds",
+    "posttest": "npm run lint",
+    "test": "date -Iseconds"
+  },
+  "devDependencies": {
+    "@jobscale/eslint-plugin-standard": "^0.0.12",
+    "eslint": "^9.39.2",
+    "eslint-plugin-jest": "^29.15.0"
+  }
+}
