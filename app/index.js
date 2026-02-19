@@ -21,7 +21,8 @@ const cleanCache = () => {
 const FORWARD_PROXY_HOST = process.env.FORWARD_PROXY_HOST || 'n100.jsx.jp';
 const FORWARD_PROXY_PORT = Number.parseInt(process.env.FORWARD_PROXY_PORT || 3128, 10);
 
-const swallow = e => e?.code === 'ECONNRESET' || logger.error('Socket error:', e);
+const swallow = e => ['ECONNRESET', 'EPIPE']
+.includes(e?.code) || logger.error('Socket error:', e);
 const server = http.createServer();
 server.on('connection', socket => socket.on('error', swallow));
 server.on('connect', (req, clientSocket, head) => {

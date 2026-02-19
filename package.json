@@ -14,9 +14,11 @@
     "posttest": "npm run lint",
     "test": "date -Iseconds"
   },
+  "pre-commit": "test",
   "devDependencies": {
     "@jobscale/eslint-plugin-standard": "^0.0.12",
     "eslint": "^9.39.2",
-    "eslint-plugin-jest": "^29.15.0"
+    "eslint-plugin-jest": "^29.15.0",
+    "pre-commit": "^1.2.2"
   }
 }

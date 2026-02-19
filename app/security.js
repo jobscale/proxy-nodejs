@@ -22,7 +22,7 @@ const denyList = [
 export const denyDomain = host => denyList.some(exp => host.match(exp));
 
 // IPv4 → 32bit 整数
-const ipToInt = ip => ip.split('.').reduce((acc, v) => (acc << 8) + v, 0) >>> 0;
+const ipToInt = ip => ip.split('.').reduce((acc, v) => acc << 8 | v, 0) >>> 0;
 
 // CIDR 判定
 const inCIDR = (ip, base, mask) => {
