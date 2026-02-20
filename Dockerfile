@@ -7,6 +7,7 @@ COPY --chown=node:staff package.json .
 RUN npm i
 COPY --chown=node:staff app app
 COPY --chown=node:staff acl acl
+COPY --chown=node:staff index.js .
 COPY --chown=node:staff __test__ __test__
 RUN npm test
 
@@ -23,6 +24,7 @@ COPY --chown=node:staff package.json .
 RUN npm i --omit=dev
 COPY --chown=node:staff app app
 COPY --chown=node:staff acl acl
-
-EXPOSE 3128/tcp
+COPY --chown=node:staff index.js .
+EXPOSE 3128
+EXPOSE 3443
 CMD ["npm", "start"]

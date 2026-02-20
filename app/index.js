@@ -1,10 +1,7 @@
-import http from 'http';
 import net from 'net';
 import { allowedIp, denyDomain } from './security.js';
 
 const logger = console;
-const PORT = Number.parseInt(process.env.PORT || 3128, 10);
-const BIND = process.env.BIND || '0.0.0.0';
 
 const cache = {
   hosts: new Map(),
@@ -21,11 +18,10 @@ const cleanCache = () => {
 const FORWARD_PROXY_HOST = process.env.FORWARD_PROXY_HOST || 'n100.jsx.jp';
 const FORWARD_PROXY_PORT = Number.parseInt(process.env.FORWARD_PROXY_PORT || 3128, 10);
 
-const swallow = e => ['ECONNRESET', 'EPIPE']
+export const swallow = e => ['ECONNRESET', 'EPIPE']
 .includes(e?.code) || logger.error('Socket error:', e);
-const server = http.createServer();
-server.on('connection', socket => socket.on('error', swallow));
-server.on('connect', (req, clientSocket, head) => {
+
+export const proxyConnect = (req, clientSocket, head) => {
   clientSocket.on('error', swallow);
   const [host, port] = req.url.split(':');
   const ip = clientSocket.remoteAddress.replace(/^::ffff:/, '');
@@ -88,8 +84,4 @@ server.on('connect', (req, clientSocket, head) => {
   serverSocket.on('error', swallow);
   clientSocket.on('close', () => serverSocket.end());
   serverSocket.on('close', () => clientSocket.end());
-});
-
-server.listen(PORT, BIND, () => {
-  logger.info(`HTTP CONNECT proxy running on ${BIND}:${PORT}`);
-});
+};
