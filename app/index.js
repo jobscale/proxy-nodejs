@@ -1,9 +1,13 @@
 import net from 'net';
 import { allowedIp, denyDomain } from './security.js';
 
-const { JEST_TEST } = process.env;
+const JEST_TEST = Object.keys(process.env).filter(v => v.toLowerCase().match('jest')).length;
 
-const logger = console;
+const logger = new Proxy(console, {
+  get(target, property) {
+    return (...args) => target[property](`[${property.toUpperCase()}]`.padEnd(8, ' '), ...args);
+  },
+});
 
 const cache = {
   hosts: new Map(),
@@ -20,15 +24,21 @@ const cleanCache = () => {
 const FORWARD_PROXY_HOST = process.env.FORWARD_PROXY_HOST || 'n100.jsx.jp';
 const FORWARD_PROXY_PORT = Number.parseInt(process.env.FORWARD_PROXY_PORT || 3128, 10);
 
+const parseError = e => {
+  const [error] = e?.errors ?? [];
+  if (!error) return e.toString();
+  const { code, address, port } = error;
+  return `${code} ${address}:${port}`;
+};
 export const swallow = e => ['ECONNRESET', 'EPIPE']
-.includes(e?.code) || logger.error('Socket error:', e);
+.includes(e?.code) || logger.error(JSON.stringify({ ts: new Date(), 'Socket error:': parseError(e) }));
 
 export const proxyConnect = (req, clientSocket, head) => {
   clientSocket.on('error', swallow);
   const [host, port] = req.url.split(':');
   const ip = clientSocket.remoteAddress.replace(/^::ffff:/, '');
   const exist = cache.hosts.get(host);
-  if (!exist) logger.info(JSON.stringify({ host, access: ip }));
+  if (!exist) logger.info(JSON.stringify({ ts: new Date(), host, access: ip }));
   // cache stock or refresh
   cache.hosts.set(host, Date.now());
   // cache clean - 暇なときに実施
@@ -39,7 +49,7 @@ export const proxyConnect = (req, clientSocket, head) => {
 
   // acl IP or ドメインを拒否
   if (!allowedIp(ip) || denyDomain(host)) {
-    logger.info(JSON.stringify({ host, blocking: ip, timestamp: new Date() }));
+    logger.warn(JSON.stringify({ ts: new Date(), host, blocking: ip }));
     clientSocket.write(
       'HTTP/1.1 403 Forbidden\r\n' +
       'Content-Length: 0\r\n' +
