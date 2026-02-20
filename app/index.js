@@ -1,6 +1,8 @@
 import net from 'net';
 import { allowedIp, denyDomain } from './security.js';
 
+const { JEST_TEST } = process.env;
+
 const logger = console;
 
 const cache = {
@@ -30,8 +32,10 @@ export const proxyConnect = (req, clientSocket, head) => {
   // cache stock or refresh
   cache.hosts.set(host, Date.now());
   // cache clean - 暇なときに実施
-  clearTimeout(cache.id);
-  cache.id = setTimeout(cleanCache, 10_000);
+  if (!JEST_TEST) {
+    clearTimeout(cache.id);
+    cache.id = setTimeout(cleanCache, 60_000);
+  }
 
   // acl IP or ドメインを拒否
   if (!allowedIp(ip) || denyDomain(host)) {
