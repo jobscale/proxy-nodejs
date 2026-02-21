@@ -11,8 +11,7 @@ COPY --chown=node:staff index.js .
 COPY --chown=node:staff __test__ __test__
 RUN npm test
 
-# FROM node:lts-trixie-slim
-FROM ghcr.io/jobscale/node
+FROM node:lts-trixie-slim
 SHELL ["bash", "-c"]
 WORKDIR /home/node
 ENV DEBIAN_FRONTEND=noninteractive
