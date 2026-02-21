@@ -1,6 +1,6 @@
 {
   "name": "proxy-nodejs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "keywords": [],
   "author": "",
@@ -8,7 +8,8 @@
   "type": "module",
   "main": "app/index.js",
   "scripts": {
-    "start": "PORT=8080 node index.js",
+    "start": "node index.js",
+    "dev": "PORT=8080 node index.js",
     "lint": "eslint",
     "pretest": "date -Iseconds",
     "posttest": "npm run lint",
