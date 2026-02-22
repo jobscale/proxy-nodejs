@@ -16,7 +16,7 @@ SHELL ["bash", "-c"]
 WORKDIR /home/node
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  ca-certificates dnsutils curl vim \
+  ca-certificates dnsutils iproute2 curl vim \
  && apt-get clean && rm -fr /var/lib/apt/lists/*
 
 USER node
