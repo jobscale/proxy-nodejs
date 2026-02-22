@@ -10,13 +10,19 @@ const logger = new Proxy(console, {
 });
 
 const cache = {
-  hosts: new Map(),
+  access: new Map(),
   TTL: 90 * 24 * 60 * 60 * 1000,
+  blocking: new Map(),
+  QUIET: 60 * 60 * 1000,
 };
 const cleanCache = () => {
   const expired = Date.now() - cache.TTL;
-  for (const [host, last] of cache.hosts.entries()) {
-    if (last < expired) cache.hosts.delete(host);
+  for (const [host, last] of cache.access.entries()) {
+    if (last < expired) cache.access.delete(host);
+  }
+  const quiet = Date.now() - cache.QUIET;
+  for (const [host, last] of cache.blocking.entries()) {
+    if (last < quiet) cache.blocking.delete(host);
   }
 };
 
@@ -37,10 +43,9 @@ export const proxyConnect = (req, clientSocket, head) => {
   clientSocket.on('error', swallow);
   const [host, port] = req.url.split(':');
   const ip = clientSocket.remoteAddress.replace(/^::ffff:/, '');
-  const exist = cache.hosts.get(host);
-  if (!exist) logger.info(JSON.stringify({ ts: new Date(), host, access: ip }));
+  if (!cache.access.get(host)) logger.info(JSON.stringify({ ts: new Date(), host, access: ip }));
   // cache stock or refresh
-  cache.hosts.set(host, Date.now());
+  cache.access.set(host, Date.now());
   // cache clean - 暇なときに実施
   if (!JEST_TEST) {
     clearTimeout(cache.id);
@@ -49,7 +54,9 @@ export const proxyConnect = (req, clientSocket, head) => {
 
   // acl IP or ドメインを拒否
   if (!allowedIp(ip) || denyDomain(host)) {
-    logger.warn(JSON.stringify({ ts: new Date(), host, blocking: ip }));
+    if (!cache.blocking.get(host)) logger.warn(JSON.stringify({ ts: new Date(), host, blocking: ip }));
+    // cache stock or refresh
+    cache.blocking.set(host, Date.now());
     clientSocket.write(
       'HTTP/1.1 403 Forbidden\r\n' +
       'Content-Length: 0\r\n' +
