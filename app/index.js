@@ -5,25 +5,26 @@ const JEST_TEST = Object.keys(process.env).filter(v => v.toLowerCase().match('je
 
 const logger = new Proxy(console, {
   get(target, property) {
-    return (...args) => target[property](`[${property.toUpperCase()}]`.padEnd(8, ' '), ...args);
+    return (...args) => target[property](`[proxy ${property.toUpperCase()}]`.padEnd(8, ' '), ...args);
   },
 });
 
 const cache = {
   access: new Map(),
-  TTL: 90 * 24 * 60 * 60 * 1000,
+  TTL: 24 * 60 * 60 * 1000,
   blocking: new Map(),
   QUIET: 60 * 60 * 1000,
-};
-const cleanCache = () => {
-  const expired = Date.now() - cache.TTL;
-  for (const [host, last] of cache.access.entries()) {
-    if (last < expired) cache.access.delete(host);
-  }
-  const quiet = Date.now() - cache.QUIET;
-  for (const [host, last] of cache.blocking.entries()) {
-    if (last < quiet) cache.blocking.delete(host);
-  }
+
+  clean() {
+    const expired = Date.now() - cache.TTL;
+    for (const [host, last] of cache.access.entries()) {
+      if (last < expired) cache.access.delete(host);
+    }
+    const quiet = Date.now() - cache.QUIET;
+    for (const [host, last] of cache.blocking.entries()) {
+      if (last < quiet) cache.blocking.delete(host);
+    }
+  },
 };
 
 // バイパス先の HTTP プロキシ
@@ -49,7 +50,7 @@ export const proxyConnect = (req, clientSocket, head) => {
   // cache clean - 暇なときに実施
   if (!JEST_TEST) {
     clearTimeout(cache.id);
-    cache.id = setTimeout(cleanCache, 60_000);
+    cache.id = setTimeout(cache.clean, 60_000);
   }
 
   // acl IP or ドメインを拒否
